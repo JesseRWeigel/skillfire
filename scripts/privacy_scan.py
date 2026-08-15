@@ -58,7 +58,8 @@ ALLOWED_BINARY: set = set()
 # Files the scan must have opened. A `git ls-files` that comes back short, from a broken repo or
 # a wrong working directory, would otherwise report a clean tree it never looked at.
 REQUIRED = ("README.md", "skillfire/events.py", "skillfire/fixtures.py",
-            "skillfire/redact.py", "scripts/verify.sh")
+            "skillfire/redact.py", "scripts/verify.sh", "docs/measured.json",
+            "docs/index.html")
 
 
 def tracked_files() -> list:

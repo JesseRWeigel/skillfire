@@ -44,7 +44,9 @@ PLANTED = {
     "github token": "ghp" + "_" + "{FILL:lower:36}",
     "aws key": "AKIA" + "{FILL:upper:16}",
     "password": "hunter2-swordfish-correct",
-    "home path": "/home/afakeperson/Projects/private-thing",
+    # Split the same way the credentials are, so the privacy scanner's home path rule stays
+    # armed against this file instead of having to exclude it.
+    "home path": "/" + "home" + "/afakeperson/Projects/private-thing",
     "personal": "Dr Ilse Vandenberg prescribed the beta blocker",
 }
 

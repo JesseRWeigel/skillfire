@@ -123,7 +123,69 @@ output.
 Pasted output of `bash scripts/verify.sh`:
 
 ```
-PLACEHOLDER
+$ bash scripts/verify.sh
+== 1. python
+   python 3.12.3, standard library only
+   PASS
+
+== 2. unit tests
+----------------------------------------------------------------------
+Ran 59 tests in 0.048s
+
+OK
+   PASS
+
+== 3. the measurement is deterministic
+   FINGERPRINT bb1040d1427d9b8aad7b518ab9fb8f14e8c2c5c50be89b52c9077ada2d461485
+   PASS
+
+== 4. sabotage suite, three gates and a null control
+
+30 of 30 sabotages caught (1 of them scored under the dormant rule)
+SABOTAGE SUITE PASSED
+   PASS
+
+== 5. independent recomputation, a second reader that imports nothing from the package
+  independent: imports nothing from skillfire, no computed and no relative import
+  accepted as required: probe_clean.py
+  rejected as required: probe_computed.py
+  rejected as required: probe_imports.py
+  rejected as required: probe_relative.py
+  inventory agrees: 8 skills, 250 tokens per session
+  fires agree: 7 in total, 3 skill(s) with any
+  availability agrees: gamma:late-arrival live in 2 of 14 sessions
+  6 planted values are all in the corpus and none in the report
+INDEPENDENT CHECK PASSED
+   PASS
+
+== 6. privacy scan with planted controls
+  controls: 5 planted patterns detected, a NUL byte file reported rather than skipped
+  read 34 of 34 tracked files
+PRIVACY SCAN PASSED
+   PASS
+
+== 7. the published page is not stale
+  the published page matches the data (27002 bytes)
+   PASS
+
+== 8. the CLI reports the synthetic machine end to end
+   8 skills loaded in every session, about 250 tokens of description
+   6 values planted in the transcripts, 0 in the report
+   PASS
+
+== 9. an empty corpus is reported as such rather than as zero fires
+   exit 2: no transcripts found. Point --transcripts at a directory of .jsonl sessions.
+   PASS
+
+== 10. the README carries this script's own result
+   Status and Unfinished present, 59 tests as claimed
+   PASS
+
+== 11. verify did not modify the tree it was verifying
+   34 tracked files unchanged
+   PASS
+
+VERIFY PASSED: skillfire, 11 of 11 steps
 ```
 
 ## Unfinished

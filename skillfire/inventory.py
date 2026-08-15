@@ -156,8 +156,8 @@ def load_installed(home: Path) -> dict:
     return data.get("plugins", {}) if isinstance(data, dict) else {}
 
 
-def build(home: Path | None = None, project_dirs=()) -> tuple[list[Skill], InventoryStats]:
-    home = home or claude_home()
+def build(home=None, project_dirs=()) -> tuple[list[Skill], InventoryStats]:
+    home = Path(home) if home is not None else claude_home()
     stats = InventoryStats()
     settings = load_settings(home)
     enabled = {k for k, v in (settings.get("enabledPlugins") or {}).items() if v}

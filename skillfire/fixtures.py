@@ -171,7 +171,8 @@ def _sessions() -> dict:
             _record("user", "2026-03-09T10:03:00.000Z",
                     "read the parquet row group and convert it to arrow", isSidechain=True),
             {"type": "attachment", "timestamp": "2026-03-09T10:04:00.000Z"},
-            _record("user", "2026-03-09T10:05:00.000Z", f"aws key {aws} for the bucket"),
+            _record("user", "2026-03-09T10:05:00.000Z",
+                    f"aws key {aws} for the bucket. {PLANTED['personal']}"),
         ],
         # A session with no timestamps at all.
         "s10-timeless.jsonl": [

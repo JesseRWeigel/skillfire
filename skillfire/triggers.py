@@ -65,18 +65,19 @@ STOP = {
 
 def tokens(text: str) -> set[str]:
     """Lowercase unigrams and bigrams. The one place transcript prose is touched."""
-    words = WORD.findall(text.lower())
     out = set()
     previous = None
-    for word in words:
-        word = word.strip("._-")
+    for raw in WORD.findall(text.lower()):
+        word = raw.strip("._-")
         if not word:
             previous = None
             continue
         out.add(word)
         if previous:
             out.add(previous + " " + word)
-        previous = word
+        # Trailing punctuation ends a sentence or a list item, so the next word is not a
+        # continuation of this one. "next.js" keeps its dot and keeps the chain.
+        previous = None if raw != word else word
     return out
 
 

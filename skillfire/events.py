@@ -185,7 +185,12 @@ def scan_file(path, vocab, known_slash: dict | None = None) -> SessionFacts:
                     name = block.get("name")
                     args = block.get("input") if isinstance(block.get("input"), dict) else {}
                     if name == "Skill":
-                        facts.fires.append((timestamp, safe_name(args.get("skill")), "tool"))
+                        # A skill can be named in full or by its bare name when that is
+                        # unambiguous, and both forms occur in real transcripts. Resolving the
+                        # bare form here is what stops a plugin skill being filed as "fired
+                        # something not installed".
+                        raw = safe_name(args.get("skill"))
+                        facts.fires.append((timestamp, known_slash.get(raw, raw), "tool"))
                     elif name == "SlashCommand":
                         raw = args.get("command") or ""
                         head = str(raw).strip().lstrip("/").split()[0] if str(raw).strip() else ""

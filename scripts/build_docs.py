@@ -57,6 +57,14 @@ code{background:var(--card);border:1px solid var(--line);border-radius:3px;paddi
 .bad{color:var(--bad);font-weight:600}.warn{color:var(--warn);font-weight:600}
 .good{color:var(--good);font-weight:600}
 ul{color:var(--muted);max-width:42rem}
+figure{margin:1.5rem 0 0;background:var(--card);border:1px solid var(--line);border-radius:9px;
+  padding:1rem}
+figure svg{display:block;border-radius:4px;overflow:hidden}
+figcaption{color:var(--muted);font-size:.82rem;margin-top:.6rem;max-width:42rem}
+text.seg{fill:#fff;font:600 13px ui-sans-serif,system-ui,sans-serif}
+.legend{display:flex;flex-wrap:wrap;gap:.35rem 1rem;margin-top:.7rem}
+.key{color:var(--muted);font-size:.78rem;display:flex;align-items:center;gap:.4rem}
+.key i{width:.7rem;height:.7rem;border-radius:2px;flex:none}
 footer{margin-top:3rem;color:var(--muted);font-size:.85rem}
 """
 
@@ -78,6 +86,88 @@ def measure_now() -> dict:
 
 def cell(value):
     return f'<td class="num">{html.escape(str(value))}</td>'
+
+
+# The three classes, in the order they are stacked and drawn, with the colour each gets.
+CLASSES = (
+    ("fired", "fired at least once", "var(--good)"),
+    ("never-fired-had-openings", "never fired, wording came up", "var(--bad)"),
+    ("never-fired-no-opening", "never fired, wording never came up", "var(--muted)"),
+)
+
+
+def budget_bar(rows: list) -> str:
+    """One bar, the whole standing cost, split by what the cost bought.
+
+    The tables below say the same thing and nobody reads a hundred rows of them. A proportion is
+    the one thing a bar does better than a number, and the proportion is the finding.
+    """
+    totals = {key: sum(r["est_tokens"] for r in rows if r["class"] == key)
+              for key, _, _ in CLASSES}
+    grand = sum(totals.values())
+    if not grand:
+        return ""
+
+    segments, legend, x = [], [], 0.0
+    for key, label, colour in CLASSES:
+        width = totals[key] * 100.0 / grand
+        if width > 0:
+            segments.append(
+                f'<rect x="{x:.3f}%" y="0" width="{width:.3f}%" height="34" fill="{colour}">'
+                f'<title>{html.escape(label)}: {totals[key]:,} tokens, '
+                f'{width:.1f}% of the standing cost</title></rect>')
+            # A label only fits inside a segment that is actually wide enough to hold it.
+            if width >= 9:
+                segments.append(
+                    f'<text x="{x + width / 2:.3f}%" y="22" text-anchor="middle" '
+                    f'class="seg">{width:.0f}%</text>')
+            x += width
+        # The share goes in the legend as well as in the bar, because a segment too narrow to
+        # hold its own label is exactly the one a reader wants the number for.
+        legend.append(
+            f'<span class=key><i style="background:{colour}"></i>{html.escape(label)} '
+            f'&middot; {totals[key]:,} tok &middot; {width:.0f}%</span>')
+
+    return (f'<figure><svg viewBox="0 0 1000 34" width="100%" height="34" '
+            f'preserveAspectRatio="none" role="img" aria-label="standing token cost by class">'
+            f'{"".join(segments)}</svg>'
+            f'<div class=legend>{"".join(legend)}</div>'
+            f'<figcaption>All {len(rows)} installed skills, each sized by the tokens its name and '
+            f'description add to every system prompt.</figcaption></figure>')
+
+
+def skyline(rows: list) -> str:
+    """Every skill as one column, tallest first, coloured by whether it ever fired.
+
+    Sorted by cost rather than grouped by class on purpose: the question the chart answers is
+    whether the expensive ones are the ones that earn it, and grouping first would answer it in
+    advance.
+    """
+    # Ties broken by name, because two skills of equal size must not swap places between runs.
+    ordered = sorted(rows, key=lambda r: (-r["est_tokens"], r["skill"]))
+    peak = max((r["est_tokens"] for r in ordered), default=0)
+    if not peak:
+        return ""
+
+    colour = {key: shade for key, _, shade in CLASSES}
+    slot, plot = 10.0, 150.0
+    bars = []
+    for index, row in enumerate(ordered):
+        height = row["est_tokens"] * plot / peak
+        bars.append(
+            f'<rect x="{index * slot:.1f}" y="{plot - height:.2f}" width="{slot - 2:.1f}" '
+            f'height="{height:.2f}" fill="{colour[row["class"]]}">'
+            f'<title>{html.escape(row["skill"])}: {row["est_tokens"]:,} tokens, '
+            f'{row["fires"]} fires</title></rect>')
+
+    widest = ordered[0]
+    return (f'<figure><svg viewBox="0 0 {len(ordered) * slot:.0f} {plot:.0f}" width="100%" '
+            f'height="150" preserveAspectRatio="none" role="img" '
+            f'aria-label="every installed skill as a column, sized by token cost">'
+            f'{"".join(bars)}</svg>'
+            f'<figcaption>One column per skill, tallest first. The most expensive is '
+            f'<code>{html.escape(widest["skill"])}</code> at {widest["est_tokens"]:,} tokens. '
+            f'Hover any column for its name and fire count.</figcaption></figure>')
 
 
 def render(data: dict) -> str:
@@ -132,6 +222,10 @@ def render(data: dict) -> str:
         f"<div class=stat><b>{summary['never_fired_had_openings'] + summary['never_fired_no_opening']}"
         "</b><span>never fired once</span></div>",
         "</div>",
+
+        "<h2>Where the standing cost goes</h2>",
+        budget_bar(rows),
+        skyline(rows),
 
         "<h2>What the counterfactual can and cannot see</h2>",
         "<p>Counting fires is easy. The number that would say a skill is dead weight is the one "

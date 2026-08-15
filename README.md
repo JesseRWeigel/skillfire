@@ -29,6 +29,11 @@ names only.
 
 ## The finding, on the development machine
 
+**[See the charts and the full per-skill tables →](https://jesserweigel.github.io/skillfire/)**
+
+That page is generated from `docs/measured.json` by `scripts/build_docs.py`, and the build fails
+if the published page drifts from the data behind it.
+
 1080 transcripts, 19 March to 15 August 2026, against 106 skills from 27 enabled plugins.
 
 - The 106 descriptions are about **9,622 tokens loaded into every single session**.

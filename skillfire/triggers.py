@@ -38,6 +38,10 @@ MAX_TERMS_PER_SKILL = 24
 MIN_TERM_LEN = 4
 # A term in more than this share of the corpus's user turns describes the corpus, not a skill.
 MAX_TURN_RATIO = 0.10
+# Below this many turns a share is not an estimate of anything. On a ten turn corpus a ten
+# percent ceiling drops any term used twice, which silently deleted two thirds of the fixture's
+# trigger vocabulary the first time this ran.
+MIN_TURN_CEILING = 5
 
 WORD = re.compile(r"[a-z][a-z0-9_.-]*")
 
@@ -130,7 +134,7 @@ class Vocabulary:
 def prune(vocab: Vocabulary, turn_frequency, total_turns: int,
           max_ratio: float = MAX_TURN_RATIO) -> tuple[dict, list]:
     """Drop terms the corpus itself shows to be filler. Returns (kept terms, dropped terms)."""
-    ceiling = max_ratio * total_turns if total_turns else 0
+    ceiling = max(max_ratio * total_turns, MIN_TURN_CEILING) if total_turns else 0
     dropped = sorted(term for term in vocab.terms if turn_frequency.get(term, 0) > ceiling)
     banned = set(dropped)
     kept = {name: [t for t in terms if t not in banned]

@@ -175,7 +175,18 @@ def totals(rows, corpus) -> dict:
     silent = [r for r in values if r.verdict_class == "never-fired-no-opening"]
     spent = sum(r.tokens_spent for r in values)
     fires = sum(r.fires for r in values)
+    fire_sessions = sum(r.fire_sessions for r in values)
+    in_opportunity = sum(r.fires_in_opportunity for r in values)
     return {
+        # How well the proxy retrodicts the fires that really happened. This is the number that
+        # says whether the opportunity counts below mean anything. If a skill fired and the
+        # session was not flagged as an opportunity for it, the vocabulary missed a case it was
+        # supposed to be able to see, and every "never fired but had openings" row inherits that
+        # same unreliability. It is reported before the opportunity counts on purpose.
+        "fire_sessions": fire_sessions,
+        "fire_sessions_flagged_as_opportunity": in_opportunity,
+        "proxy_recall_on_real_fires": (in_opportunity / fire_sessions) if fire_sessions else None,
+        "manifest_reads": sum(r.manifest_reads for r in values),
         "skills": len(values),
         "fired": len(fired),
         "never_fired_had_openings": len(openings),

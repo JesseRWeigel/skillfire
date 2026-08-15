@@ -68,12 +68,17 @@ def render_text(rows, corpus, summary, limit: int = 0) -> str:
                  f"about {summary['standing_tokens_per_session']} tokens of description")
     lines.append(f"{corpus.sessions} transcripts, {corpus.user_turns} user turns, "
                  f"{corpus.tool_calls} tool calls")
-    lines.append(f"{summary['fires_matched_to_inventory']} fires matched to the inventory in "
-                 f"{corpus.sessions_with_a_fire} session(s); "
-                 f"{corpus.fires_unknown_skill} fire(s) named something not installed")
+    lines.append(f"{corpus.sessions_with_a_fire} session(s) fired any skill at all: "
+                 f"{summary['fires_matched_to_inventory']} fire(s) named an installed skill, "
+                 f"{corpus.fires_unknown_skill} named something not in the inventory")
     per_fire = summary["tokens_per_fire"]
     lines.append(f"estimated standing spend {summary['standing_tokens_spent_estimate']} tokens, "
                  + (f"{per_fire} tokens per fire" if per_fire else "no fires to divide by"))
+    recall = summary["proxy_recall_on_real_fires"]
+    lines.append(f"trigger proxy: {summary['fire_sessions_flagged_as_opportunity']} of "
+                 f"{summary['fire_sessions']} sessions that really fired a skill were flagged as "
+                 f"an opportunity for it ({_rate(recall)} recall on known cases)")
+    lines.append(f"skill manifests opened as ordinary files: {summary['manifest_reads']}")
     lines.append("")
     lines.append(f"  fired                        {summary['fired']}")
     lines.append(f"  never fired, had openings    {summary['never_fired_had_openings']}")

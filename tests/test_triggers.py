@@ -32,11 +32,14 @@ class Terms(unittest.TestCase):
                 self.assertNotIn(filler, terms)
 
     def test_a_word_shared_by_too_many_skills_is_dropped(self):
-        # "use" and "when" open every fixture description, so before any filtering they would
-        # be candidate terms for all seven skills.
+        # "workspace" is in five of the fixture descriptions. No stoplist would catch it, since
+        # it is an ordinary content word, and that is exactly what the spread filter is for.
+        holders = [name for name, skill in
+                   ((s.name, s) for s in self.skills) if "workspace" in skill.description]
+        self.assertGreater(len(holders), triggers.MAX_SKILLS_PER_TERM)
         for name, terms in self.terms.items():
+            self.assertNotIn("workspace", terms, name)
             self.assertNotIn("use", terms, name)
-            self.assertNotIn("use when", terms, name)
 
     def test_a_term_too_short_to_discriminate_is_dropped(self):
         for terms in self.terms.values():

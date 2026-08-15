@@ -79,6 +79,9 @@ def render_text(rows, corpus, summary, limit: int = 0) -> str:
                  f"{summary['fire_sessions']} sessions that really fired a skill were flagged as "
                  f"an opportunity for it ({_rate(recall)} recall on known cases)")
     lines.append(f"skill manifests opened as ordinary files: {summary['manifest_reads']}")
+    if corpus.unknown_fired_names:
+        lines.append("fired but not in the inventory: "
+                     + ", ".join(corpus.unknown_fired_names))
     lines.append("")
     lines.append(f"  fired                        {summary['fired']}")
     lines.append(f"  never fired, had openings    {summary['never_fired_had_openings']}")

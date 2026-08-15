@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from . import analyze, events, inventory, triggers
@@ -49,6 +50,17 @@ def run(claude_home=None, transcripts=None, project_dirs=(), limit: int = 0):
 
     rows, corpus = analyze.analyse(skills, facts, kept_terms)
     summary = analyze.totals(rows, corpus)
+    # A measurement of a privacy property rather than a claim about one. A transcript path
+    # names a home directory and a project, so if any session identifier stops being an opaque
+    # digest this drops to zero and the fingerprint moves.
+    summary["session_ids_opaque"] = int(
+        all(re.fullmatch(r"[0-9a-f]{12}", f.session) for f in facts))
+    # The other half of the same property. Every word a scan retained has to have come from the
+    # closed vocabulary, otherwise arbitrary transcript words are sitting in memory in a field
+    # that could be serialised by any later change. Zero is the only acceptable value and it is
+    # measured rather than asserted, so a regression moves the fingerprint.
+    summary["turn_terms_outside_vocabulary"] = sum(
+        len(set(terms) - vocab.terms) for f in facts for terms in f.turn_terms)
     summary["trigger_terms_candidate"] = len(vocab.terms)
     summary["trigger_terms_dropped_as_filler"] = len(dropped)
     summary["trigger_terms_total"] = matcher.n_terms

@@ -49,25 +49,32 @@ PLANTED = {
 }
 
 # name -> (description, installed at)
+# The word "workspace" is deliberately in five of these. It is not filler in the ordinary sense,
+# so no stoplist would remove it, and it is exactly the shape of term the spread filter exists
+# for: shared by more skills than MAX_SKILLS_PER_TERM, therefore useless for telling them apart.
 PLUGIN_SKILLS = {
     "alpha:dither-images": (
         "Use when converting an image to a limited palette with Floyd-Steinberg or "
-        "Riemersma dithering, or when comparing dither kernels.", T0),
+        "Riemersma dithering, or when comparing dither kernels in a workspace.", T0),
     "alpha:brew-espresso": (
         "Use when dialling in an espresso grinder, adjusting extraction yield, or "
-        "diagnosing channelling in a portafilter basket.", T0),
+        "diagnosing channelling in a portafilter basket in a workspace.", T0),
     "beta:lockfile-surgery": (
         "Use when a lockfile conflicts on merge, when pruning transitive dependencies, or "
-        "when auditing a lockfile for yanked releases.", T0),
+        "when auditing a lockfile for yanked releases in a workspace.", T0),
     "beta:parquet-loader": (
         "Use when reading or writing parquet, tuning row group size, or converting between "
-        "parquet and arrow.", T0),
+        "parquet and arrow in a workspace.", T0),
     "beta:never-relevant": (
         "Use when calibrating a spectrophotometer against a tristimulus reference tile in a "
-        "metrology laboratory.", T0),
+        "metrology laboratory in a workspace.", T0),
     "gamma:late-arrival": (
         "Use when scheduling a cron job, debugging a crontab timezone, or converting a "
         "schedule expression.", T_LATE),
+    # Its one distinctive word is a word the corpus below wears out, so document frequency
+    # deletes it and the skill is left unable to match anything.
+    "epsilon:worn-out-word": (
+        "Use when asked to refactor something.", T0),
 }
 
 USER_SKILLS = {
@@ -178,6 +185,34 @@ def _sessions() -> dict:
         "s10-timeless.jsonl": [
             {"type": "user", "message": {"role": "user",
                                          "content": "dithering kernels and palette conversion"}},
+        ],
+        # A fire whose skill name is shaped like a credential. The structural rule in events.py
+        # lets this through, because it IS a valid skill name shape, so it is the one thing the
+        # output scrubber has to catch on its own. Without it the scrubber is dormant and its
+        # removal is unobservable.
+        "s11-name-shaped-like-a-token.jsonl": [
+            _record("user", "2026-03-11T10:00:00.000Z", "carry on"),
+            _record("assistant", "2026-03-11T10:00:05.000Z",
+                    [_tool_use("Skill", {"skill": token})]),
+        ],
+        # Exactly one trigger term of exactly one skill. Two are required, so this must not
+        # become an opportunity, and lowering the threshold to one must make it become one.
+        "s12-single-term.jsonl": [
+            _record("user", "2026-03-12T10:00:00.000Z", "the spectrophotometer is broken"),
+        ],
+        # A word worn out by repetition. It is the only distinctive word one skill has, and by
+        # the seventh turn it describes the corpus rather than the skill.
+        "s13-worn-out.jsonl": [
+            _record("user", f"2026-03-13T10:0{n}:00.000Z", "please refactor it")
+            for n in range(7)
+        ],
+        # Middling frequency. Common enough that a ten percent ceiling on a twenty turn corpus
+        # would delete it, rare enough that the floor should protect it. The gap between those
+        # two answers is what the floor is for.
+        "s14-middling.jsonl": [
+            _record("user", f"2026-03-14T10:0{n}:00.000Z",
+                    "read the parquet row group please")
+            for n in range(3)
         ],
     }
 

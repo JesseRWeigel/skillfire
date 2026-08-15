@@ -15,7 +15,7 @@ class Rows(unittest.TestCase):
         self.assertEqual(self.row("beta:parquet-loader").fires, 2)
 
     def test_a_fire_naming_something_uninstalled_lands_in_the_corpus_not_a_row(self):
-        self.assertEqual(self.corpus.fires_unknown_skill, 2)
+        self.assertEqual(self.corpus.fires_unknown_skill, 3)
         self.assertEqual(sum(r.fires for r in self.rows.values()),
                          self.summary["fires_matched_to_inventory"])
 
@@ -38,6 +38,15 @@ class Rows(unittest.TestCase):
             self.assertEqual(row.opportunities,
                              row.fires_in_opportunity + row.displaced_by_skill
                              + row.displaced_unassisted)
+
+    def test_capture_rate_ignores_fires_outside_an_opportunity(self):
+        # This skill fired twice and neither time was in one of its two opportunities, so it
+        # captured none of them. Counting all its fires would report a perfect two out of two
+        # and hide the fact that the trigger vocabulary and the real usage do not line up.
+        row = self.row("beta:parquet-loader")
+        self.assertEqual(row.fire_sessions, 2)
+        self.assertEqual(row.opportunities, 2)
+        self.assertEqual(row.capture_rate, 0.0)
 
     def test_capture_rate_never_exceeds_one(self):
         for row in self.rows.values():

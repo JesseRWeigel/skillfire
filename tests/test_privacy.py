@@ -41,21 +41,39 @@ class Planted(unittest.TestCase):
             self.assertNotIn(value, blob, label)
         json.loads(blob)
 
-    def test_no_field_of_a_scanned_session_holds_transcript_prose(self):
+    def scanned(self):
         from skillfire import inventory, pipeline, triggers
         home, transcripts = support.machine()
         skills, _ = inventory.build(home=home)
         vocab = triggers.Vocabulary(triggers.build(skills))
-        for path in events.find(transcripts):
-            facts = events.scan_file(path, vocab, pipeline.slash_map(skills))
+        slash = pipeline.slash_map(skills)
+        return [events.scan_file(path, vocab, slash) for path in events.find(transcripts)]
+
+    def test_no_field_of_a_scanned_session_holds_transcript_prose(self):
+        # Everything except the skill name itself. A skill name is a closed vocabulary in the
+        # ordinary case and a shape constrained string in the worst case, and the next test
+        # covers the worst case.
+        for facts in self.scanned():
             blob = json.dumps({
-                "session": facts.session, "fires": facts.fires,
+                "session": facts.session,
                 "manifest_reads": facts.manifest_reads,
                 "turn_terms": [sorted(t) for t in facts.turn_terms],
                 "matched": facts.matched,
             })
             for label, value in self.planted.items():
                 self.assertNotIn(value, blob, f"{label} survived scan_file")
+
+    def test_a_credential_shaped_skill_name_reaches_the_scanner_and_stops_at_the_scrubber(self):
+        # A token is a legal skill name, so the structural rule cannot exclude it and saying
+        # otherwise would be a false claim. This is the case the second layer exists for, and
+        # the test asserts both halves: it gets in, and it does not get out.
+        token = self.planted["github token"]
+        names = {name for facts in self.scanned() for _, name, _ in facts.fires}
+        self.assertIn(token, names)
+        text = report.render_text(self.rows, self.corpus, self.summary)
+        blob = report.render_json(self.rows, self.corpus, self.summary)
+        self.assertNotIn(token, text)
+        self.assertNotIn(token, blob)
 
     def test_a_user_skill_name_is_hashed_rather_than_printed(self):
         text = report.render_text(self.rows, self.corpus, self.summary)

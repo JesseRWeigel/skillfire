@@ -3,6 +3,10 @@
 Measure which installed Claude Code skills actually fire, which never do, and what each one
 costs in always-loaded context.
 
+> Measurements described here were taken on one development machine: an RTX 5090 with
+> 32 GB of VRAM, 12 cores, 48 GB of RAM, running Linux under WSL2. Numbers from your own
+> hardware will differ.
+
 Catalog task: `AGENT-008`. One of a public catalog of build ideas:
 https://github.com/JesseRWeigel/722-things-to-build
 
@@ -23,7 +27,7 @@ sets of words drawn from a closed vocabulary built out of public plugin descript
 no field it could put a sentence in. `docs/measured.json` and this README hold counts and skill
 names only.
 
-## The finding, on this machine
+## The finding, on the development machine
 
 1080 transcripts, 19 March to 15 August 2026, against 106 skills from 27 enabled plugins.
 
@@ -89,7 +93,7 @@ openings.
 
 ```bash
 python3 -m skillfire inventory          # what is loaded and what it costs
-python3 -m skillfire report             # measure this machine
+python3 -m skillfire report             # measure the development machine
 python3 -m skillfire report --json      # the same as JSON
 python3 scripts/build_docs.py --measure # refresh docs/measured.json and the page
 ```
